@@ -1,0 +1,18 @@
+{
+    "name": "christiaan/php-sandbox",
+    "description": "Php Sandbox in a child process",
+    "authors": [
+        {
+            "name": "Christiaan",
+            "email": "anotherhero@gmail.com"
+        }
+    ],
+    "require": {
+	"react/event-loop": "dev-master"
+    },
+    "autoload": {
+        "psr-0" : {
+            "Christiaan\\PhpSandbox" : "src"
+        }
+    }
+}

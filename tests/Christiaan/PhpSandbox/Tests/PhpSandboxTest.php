@@ -1,13 +1,22 @@
 <?php
 namespace Christiaan\PhpSandbox\Tests;
 
+use Christiaan\PhpSandbox\PhpSandbox;
+
 class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 {
-    function testSandboxRun()
+    function testBasicSandboxUsage()
     {
         $sandbox = new PhpSandbox();
-        $res =
-        $sandbox->run('return 10;');
+        $res = $sandbox->execute('return 10;');
         $this->assertEquals(10, $res);
+    }
+
+    function testCallback()
+    {
+        $sandbox = new PhpSandbox();
+        $sandbox->assignCallback('multiply', function($a) { return $a * $a; });
+        $res = $sandbox->execute('return $this->multiply(2);');
+        $this->assertEquals(4, $res);
     }
 }

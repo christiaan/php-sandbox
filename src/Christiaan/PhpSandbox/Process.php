@@ -41,6 +41,12 @@ class Process
         return is_resource($this->res);
     }
 
+    public function isRunning()
+    {
+        $status = $this->getStatus();
+        return isset($status['running']) && $status['running'];
+    }
+
     public function close()
     {
         if (!$this->isOpen())

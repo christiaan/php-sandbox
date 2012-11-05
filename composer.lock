@@ -1,5 +1,5 @@
 {
-    "hash": "7a42986a91fbb0e2b43d3439018bd86c",
+    "hash": "b5b1e5da4cc42a83476e04ba465311a7",
     "packages": [
         {
             "name": "react/event-loop",
@@ -22,7 +22,6 @@
             "suggest": {
                 "ext-libevent": ">=0.0.5"
             },
-            "time": "1347281602",
             "type": "library",
             "extra": {
                 "branch-alias": [
@@ -41,7 +40,58 @@
             "description": "Event loop abstraction layer that libraries can use for evented I/O.",
             "keywords": [
                 "event-loop"
-            ]
+            ],
+            "time": "1347281602"
+        },
+        {
+            "name": "symfony/class-loader",
+            "version": "v2.1.3",
+            "target-dir": "Symfony/Component/ClassLoader",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/ClassLoader",
+                "reference": "v2.1.3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/symfony/ClassLoader/zipball/v2.1.3",
+                "reference": "v2.1.3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "require-dev": {
+                "symfony/finder": "2.1.*"
+            },
+            "time": "2012-10-27 08:59:21",
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.1-dev"
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-0": {
+                    "Symfony\\Component\\ClassLoader": ""
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "http://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony ClassLoader Component",
+            "homepage": "http://symfony.com"
         }
     ],
     "packages-dev": null,

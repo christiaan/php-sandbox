@@ -3,75 +3,113 @@ namespace Christiaan\PhpSandbox;
 
 class PhpSandbox
 {
-    private $childBin = '../../../bin/child.php';
+    /** @var Process */
     private $child;
-    private $loop;
+    /** @var RpcProtocol */
+    private $protocol;
     private $disabledFunctions;
     private $disabledClasses;
-    private $returnValue;
-    private $returnError;
     private $callbacks;
+    private $output;
 
-    public function __construct(array $disabledClasses = array(), array $disabledFunctions = array())
+    public function __construct(array $disabledClasses = array('SplFileInfo'),
+        array $disabledFunctions = array('dl'))
     {
         $this->disabledClasses = $disabledClasses;
         $this->disabledFunctions = $disabledFunctions;
         $this->callbacks = array();
+        $this->output = '';
+        $this->assignCallback('output', array($this, 'addOutput'));
     }
 
-    private function sendAndReceiveAnswer($action, $args)
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public function assignVar($name, $value)
     {
-        $this->returnValue = null;
-        $child = $this->getChildProcess();
-        $loop = \React\EventLoop\Factory::create();
-        $loop->addReadStream($child->getReadStream(), array($this, 'receive'));
-        $this->send(array($action, $args));
-        $loop->run();
-        return $this->returnValue;
+        $this->call('assignVar', array($name, $value));
     }
 
-    private function send(array $message)
+    /**
+     * @api
+     * @param string $name
+     * @param mixed $callable
+     */
+    public function assignCallback($name, $callable)
     {
-        $child = $this->getChildProcess();
-        $message = serialize($message)."\n";
-        fputs($child->getWriteStream(), $message);
+        $child = $this->getRpcProtocol();
+        $child->addCallback($name, $callable);
+        $this->callbacks[$name] = $callable;
     }
 
-    public function receive($stream, \React\EventLoop\LoopInterface $loop)
+    /**
+     * @api
+     * @param string $name
+     * @param $args
+     * @return mixed
+     * @throws Exception
+     */
+    public function call($name, array $args)
     {
-        $message = fgets($stream);
-        $message = unserialize($message);
-        if (is_array($message)) {
-            $action = array_shift($message);
-            if ($action === 'return') {
-                $this->returnValue = array_shift($message);
-                $loop->stop();
-            }
-            if ($action === 'error') {
-                $this->returnError = array_shift($message);
-                $loop->stop();
-            }
-            if ($action === 'callParent') {
-                $method = array_shift($message);
-                if (!array_key_exists($method, $this->callbacks))
-                    $this->send(array());
-
-            }
+        $child = $this->getRpcProtocol();
+        if (!$this->child->isRunning()) {
+            throw new Exception('Child Process died');
         }
+        return $child->call($name, $args);
     }
 
-    private function getChildProcess()
+    /**
+     * @api
+     * @param string $php
+     * @return mixed
+     */
+    public function execute($php)
     {
-        if (!$this->child) {
+        return $this->call('execute', array($php));
+    }
+
+    /**
+     * @api
+     * @return string
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * @param $output
+     */
+    public function addOutput($output)
+    {
+        $this->output .= $output;
+    }
+
+    private function getRpcProtocol()
+    {
+        if (!$this->protocol) {
+            $childBin = __DIR__.'/../../../bin/child.php';
             $this->child = new Process(
                 sprintf(
                     '/usr/bin/php -d disabled_functions=%s -d disabled_classes=%s %s',
                     escapeshellarg(implode(',', $this->disabledFunctions)),
                     escapeshellarg(implode(',', $this->disabledClasses)),
-                    escapeshellarg(realpath($this->childBin))
+                    escapeshellarg(realpath($childBin))
                 )
             );
+            $this->protocol = new RpcProtocol(
+                $this->child->getReadStream(),
+                $this->child->getWriteStream(),
+                $this->child->getErrorStream(),
+                \React\EventLoop\Factory::create()
+            );
+            if ($this->callbacks) {
+                foreach ($this->callbacks as $name => $callable) {
+                    $this->protocol->addCallback($name, $callable);
+                }
+            }
         }
-        return $this->child;
+        return $this->protocol;
     }
 }

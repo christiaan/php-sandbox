@@ -19,4 +19,11 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
         $res = $sandbox->execute('return $this->multiply(2);');
         $this->assertEquals(4, $res);
     }
+
+    function testOutputHandler()
+    {
+        $sandbox = new PhpSandbox();
+        $sandbox->execute('echo "hoi";');
+        $this->assertEquals('hoi', $sandbox->getOutput());
+    }
 }

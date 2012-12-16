@@ -1,8 +1,6 @@
 <?php
 namespace Christiaan\PhpSandbox;
 
-use React\EventLoop\LoopInterface;
-
 class PhpSandboxClient
 {
     private $protocol;
@@ -26,10 +24,10 @@ class PhpSandboxClient
         $this->protocol->call('output', array($output));
     }
 
-    public function execute($php)
+    public function execute($code)
     {
         ob_start(array($this, 'output'));
-        $ret = eval($php);
+        $ret = eval($code);
         ob_end_flush();
         return $ret;
     }

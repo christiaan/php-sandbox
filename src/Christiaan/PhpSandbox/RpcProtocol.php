@@ -117,6 +117,7 @@ class RpcProtocol
      */
     private function read($stream)
     {
+        $message = '';
         if (is_resource($stream))
             $message = fgets($stream);
 

@@ -1,6 +1,8 @@
 <?php
 namespace Christiaan\PhpSandbox;
 
+use React\EventLoop\Factory;
+
 class PhpSandbox
 {
     /** @var Process */
@@ -90,7 +92,9 @@ class PhpSandbox
     {
         if (!$this->protocol) {
             $childBin = __DIR__.'/../../../bin/child.php';
-            $this->child = new Process(
+            if (!is_file($childBin))
+                throw new Exception('child.php not found generate it using bin/generateChild.php');
+                $this->child = new Process(
                 sprintf(
                     '/usr/bin/php -d disabled_functions=%s -d disabled_classes=%s %s',
                     escapeshellarg(implode(',', $this->disabledFunctions)),
@@ -98,17 +102,15 @@ class PhpSandbox
                     escapeshellarg(realpath($childBin))
                 )
             );
+            if (!$this->child->isOpen() || !$this->child->isRunning())
+                throw new Exception('Failed to spawn child process');
+
             $this->protocol = new RpcProtocol(
                 $this->child->getReadStream(),
                 $this->child->getWriteStream(),
                 $this->child->getErrorStream(),
-                \React\EventLoop\Factory::create()
+                Factory::create()
             );
-            if ($this->callbacks) {
-                foreach ($this->callbacks as $name => $callable) {
-                    $this->protocol->addCallback($name, $callable);
-                }
-            }
         }
         return $this->protocol;
     }

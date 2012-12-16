@@ -1,5 +1,5 @@
 <?php
-include '../vendor/autoload.php';
+include __DIR__.'/../vendor/autoload.php';
 
 \Symfony\Component\ClassLoader\ClassCollectionLoader::load(
     array(
@@ -11,12 +11,12 @@ include '../vendor/autoload.php';
         'React\\EventLoop\\StreamSelectLoop',
         'React\\EventLoop\\LibEventLoop',
     ),
-    '.',
+    __DIR__,
     'child',
     false
 );
 
-file_put_contents('child.php', <<<CODE
+file_put_contents(__DIR__.'/child.php', <<<CODE
 
 namespace {
     \$parent = new \Christiaan\PhpSandbox\PhpSandboxClient(

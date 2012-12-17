@@ -8,7 +8,8 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
     function testBasicSandboxUsage()
     {
         $sandbox = new PhpSandbox();
-        $res = $sandbox->execute('return 10;');
+        $sandbox->assignVar('iets', 10);
+        $res = $sandbox->execute('return $this->data[\'iets\'];');
         $this->assertEquals(10, $res);
     }
 

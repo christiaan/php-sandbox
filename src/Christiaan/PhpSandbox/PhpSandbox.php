@@ -80,13 +80,13 @@ class PhpSandbox
             $childBin = __DIR__.'/../../../bin/child.php';
             if (!is_file($childBin))
                 throw new Exception('child.php not found generate it using bin/generateChild.php');
-                $this->child = new Process(
-                sprintf(
-                    '/usr/bin/php%s %s',
-                    $this->getChildArgs(),
-                    escapeshellarg(realpath($childBin))
-                )
+
+            $cmd = sprintf(
+                'php %s %s',
+                $this->getChildArgs(),
+                escapeshellarg(realpath($childBin))
             );
+            $this->child = new Process($cmd);
             if (!$this->child->isOpen() || !$this->child->isRunning())
                 throw new Exception('Failed to spawn child process');
 

@@ -122,7 +122,7 @@ class RpcProtocol
             $message = fgets($stream);
 
         if ($message)
-            $message = @unserialize($message);
+            $message = json_decode($message, true);
 
         if (!$message || !is_array($message))
             $message = array();
@@ -132,7 +132,7 @@ class RpcProtocol
 
     private function write(array $message)
     {
-        $message = serialize($message)."\n";
+        $message = json_encode($message).PHP_EOL;
         fputs($this->writeStream, $message);
     }
 }

@@ -3,10 +3,6 @@ namespace Christiaan\PhpSandbox;
 
 use React\EventLoop\Factory;
 
-/**
- * @method execute($php)
- * @method assignVar($name, $value)
- */
 class PhpSandbox
 {
     /** @var Process */
@@ -14,7 +10,7 @@ class PhpSandbox
     /** @var RpcProtocol */
     private $protocol;
     private $output;
-    public $iniSettings;
+    private $iniSettings;
 
     public function __construct(array $iniSettings = array())
     {
@@ -28,7 +24,7 @@ class PhpSandbox
 
     /**
      * @param string $name
-     * @param mixed $callable
+     * @param callable $callable
      */
     public function assignCallback($name, $callable)
     {
@@ -36,13 +32,31 @@ class PhpSandbox
     }
 
     /**
-     * @api
+     * @param string $name
+     * @param mixed $value
+     * @return mixed
+     */
+    public function assignVar($name, $value)
+    {
+        return $this->call('assignVar', array($name, $value));
+    }
+
+    /**
+     * @param string $code
+     * @return mixed
+     */
+    public function execute($code)
+    {
+        return $this->call('execute', array($code));
+    }
+
+    /**
      * @param string $name
      * @param $args
      * @return mixed
      * @throws Exception
      */
-    public function __call($name, array $args)
+    public function call($name, array $args)
     {
         $child = $this->getRpcProtocol();
         if (!$this->child->isRunning()) {

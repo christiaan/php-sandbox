@@ -1,5 +1,6 @@
 PhpSandbox
 ==========
+[![Build Status](https://travis-ci.org/christiaan/php-sandbox.png?branch=master)](https://travis-ci.org/christiaan/php-sandbox)
 
 Php Sandbox in a child process which should make it possible to run user supplied code safely.
 

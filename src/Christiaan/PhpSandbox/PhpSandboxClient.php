@@ -5,6 +5,7 @@ class PhpSandboxClient
 {
     private $protocol;
     private $data;
+    private $obStarted;
 
     public function __construct(RpcProtocol $protocol)
     {
@@ -12,30 +13,28 @@ class PhpSandboxClient
         $this->protocol->addCallback('execute', array($this, 'execute'));
         $this->protocol->addCallback('assignVar', array($this, 'assignVar'));
         $this->data = array();
+        $this->obStarted = false;
         set_error_handler(array($this, 'errorHandler'));
         set_exception_handler(array($this, 'exceptionHandler'));
+        // see php.net/ob_start about chunksize
+        ob_start(array($this, 'output'), version_compare(PHP_VERSION, '5.4', '>=') ? 1 : 2);
     }
 
     public function __call($name, $args)
     {
-        if (ob_get_level()) ob_end_clean();
-        ob_start(array($this, 'output'));
         $ret = $this->protocol->call($name, $args);
-        ob_end_flush();
         return $ret;
     }
 
     public function output($output)
     {
         $this->protocol->call('output', array($output));
+        return '';
     }
 
     public function execute($code)
     {
-        if (ob_get_level()) ob_end_clean();
-        ob_start(array($this, 'output'));
         $ret = eval($code);
-        ob_end_flush();
         return $ret;
     }
 

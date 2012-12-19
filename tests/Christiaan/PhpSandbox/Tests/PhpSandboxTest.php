@@ -27,4 +27,18 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
         $sandbox->execute('echo "hoi";');
         $this->assertEquals('hoi', $sandbox->getOutput());
     }
+
+    function testErrorHandler()
+    {
+        $sandbox = new PhpSandbox();
+
+        try {
+            $sandbox->execute('some syntax error');
+            $thrown = false;
+        } catch (\Exception $e) {
+            $thrown = true;
+            $this->assertTrue(false !== strpos($e->getMessage(), 'PHP Parse error:  syntax error'));
+        }
+        $this->assertTrue($thrown);
+    }
 }

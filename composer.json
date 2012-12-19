@@ -1,6 +1,9 @@
 {
     "name": "christiaan/php-sandbox",
-    "description": "Php Sandbox in a child process",
+    "type": "library",
+    "description": "Php Sandbox in a child process which should make it possible to run user supplied code safely",
+    "keywords": ["php sandbox"],
+    "license": "MIT",
     "authors": [
         {
             "name": "Christiaan Baartse",

@@ -5,15 +5,14 @@ use React\EventLoop\LoopInterface;
 
 class RpcProtocol
 {
-    private $readStream;
     private $writeStream;
-    private $errorStream;
     private $loop;
     private $lastReturn;
     private $lastError;
     private $callbacks;
+    private $returnedClosure = 1;
 
-    function __construct($readStream, $writeStream, $errorStream,
+    public function __construct($readStream, $writeStream, $errorStream,
         LoopInterface $loop)
     {
         if (!is_resource($readStream))
@@ -23,22 +22,27 @@ class RpcProtocol
         if (!is_resource($errorStream))
             throw new \InvalidArgumentException();
 
-        $this->readStream = $readStream;
         $this->writeStream = $writeStream;
-        $this->errorStream = $errorStream;
         $this->loop = $loop;
 
         $this->loop->addReadStream(
-            $this->readStream, array($this, 'receive')
+            $readStream, array($this, 'receive')
         );
         $this->loop->addReadStream(
-            $this->errorStream, array($this, 'receiveError')
+            $errorStream, array($this, 'receiveError')
         );
         $this->callbacks = array();
     }
 
     public function returnValue($value)
     {
+        if ($value instanceof \Closure) {
+            $name = '__closure_' . $this->returnedClosure;
+            $this->addCallback($name, $value);
+            $this->returnedClosure += 1;
+            $this->send('returnClosure', $name);
+            return;
+        }
         $this->send('return', $value);
     }
 
@@ -54,10 +58,14 @@ class RpcProtocol
 
     public function receive($stream)
     {
-        $message = $this->read($stream);
+        $message = $this->readMessage($stream);
         $action = array_shift($message);
         if ($action === 'return') {
             $this->lastReturn = array_shift($message);
+            $this->loop->stop();
+        }
+        if ($action === 'returnClosure') {
+            $this->lastReturn = new SandboxClosure($this, array_shift($message));
             $this->loop->stop();
         }
         if ($action === 'error') {
@@ -95,7 +103,7 @@ class RpcProtocol
         $args = func_get_args();
         $this->lastError = null;
         $this->lastReturn = null;
-        $this->write($args);
+        $this->writeMessage($args);
         $this->loop->run();
         if ($this->lastError)
             throw new Exception($this->lastError);
@@ -107,7 +115,7 @@ class RpcProtocol
      * @param resource $stream
      * @return array
      */
-    private function read($stream)
+    private function readMessage($stream)
     {
         $message = '';
         if (is_resource($stream))
@@ -122,7 +130,7 @@ class RpcProtocol
         return $message;
     }
 
-    private function write(array $message)
+    private function writeMessage(array $message)
     {
         $message = json_encode($message).PHP_EOL;
         fputs($this->writeStream, $message);

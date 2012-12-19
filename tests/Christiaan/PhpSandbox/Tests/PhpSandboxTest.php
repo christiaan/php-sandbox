@@ -41,4 +41,18 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
         }
         $this->assertTrue($thrown);
     }
+
+    function testReturnedFunction()
+    {
+        $sandbox = new PhpSandbox();
+
+        /** @var $closure \Christiaan\PhpSandbox\SandboxClosure */
+        $closure = $sandbox->execute(<<<CODE
+return function() { return 1337; };
+CODE
+        );
+
+        $this->assertInstanceOf('Christiaan\PhpSandbox\SandboxClosure', $closure);
+        $this->assertEquals(1337, $closure());
+    }
 }

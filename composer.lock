@@ -1,5 +1,5 @@
 {
-    "hash": "b5b1e5da4cc42a83476e04ba465311a7",
+    "hash": "9a8b9a7611a5fcc969ffab859a009ca6",
     "packages": [
         {
             "name": "react/event-loop",
@@ -8,25 +8,27 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/event-loop",
-                "reference": "v0.2.2"
+                "reference": "v0.2.5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/reactphp/event-loop/zipball/v0.2.2",
-                "reference": "v0.2.2",
+                "url": "https://github.com/reactphp/event-loop/archive/v0.2.5.zip",
+                "reference": "v0.2.5",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.3"
             },
             "suggest": {
-                "ext-libevent": ">=0.0.5"
+                "ext-libevent": ">=0.0.5",
+                "ext-libev": "*"
             },
+            "time": "2012-11-12 23:00:05",
             "type": "library",
             "extra": {
-                "branch-alias": [
-
-    ]
+                "branch-alias": {
+                    "dev-master": "0.2-dev"
+                }
             },
             "installation-source": "source",
             "autoload": {
@@ -34,14 +36,14 @@
                     "React\\EventLoop": ""
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Event loop abstraction layer that libraries can use for evented I/O.",
             "keywords": [
                 "event-loop"
-            ],
-            "time": "1347281602"
+            ]
         },
         {
             "name": "symfony/class-loader",
@@ -94,7 +96,9 @@
             "homepage": "http://symfony.com"
         }
     ],
-    "packages-dev": null,
+    "packages-dev": [
+
+    ],
     "aliases": [
 
     ],

@@ -9,7 +9,7 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
     {
         $sandbox = new PhpSandbox();
         $sandbox->assignVar('iets', 10);
-        $res = $sandbox->execute('return $this->data[\'iets\'];');
+        $res = $sandbox->execute('return $iets;');
         $this->assertEquals(10, $res);
     }
 
@@ -17,7 +17,7 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
     {
         $sandbox = new PhpSandbox();
         $sandbox->assignCallback('multiply', function($a) { return $a * $a; });
-        $res = $sandbox->execute('return $this->multiply(2);');
+        $res = $sandbox->execute('return $parent->multiply(2);');
         $this->assertEquals(4, $res);
     }
 

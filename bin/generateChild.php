@@ -1,10 +1,11 @@
 <?php
 include __DIR__.'/../vendor/autoload.php';
 
-\Symfony\Component\ClassLoader\ClassCollectionLoader::load(
+Symfony\Component\ClassLoader\ClassCollectionLoader::load(
     array(
         'Christiaan\\PhpSandbox\\RpcProtocol',
-        'Christiaan\\PhpSandbox\\PhpSandboxClient',
+        'Christiaan\\PhpSandbox\\Child\\SandboxParent',
+        'Christiaan\\PhpSandbox\\Child\\SandboxChild',
         'Christiaan\\PhpSandbox\\Exception',
         'React\\EventLoop\\Factory',
         'React\\EventLoop\\Timer\\Timers',
@@ -19,12 +20,13 @@ include __DIR__.'/../vendor/autoload.php';
 file_put_contents(__DIR__.'/child.php', <<<CODE
 
 namespace {
-    \$parent = new \Christiaan\PhpSandbox\PhpSandboxClient(
+    \$loop = \React\EventLoop\Factory::create();
+    \$child = new Christiaan\PhpSandbox\Child\SandboxChild(
         new \Christiaan\PhpSandbox\RpcProtocol(
-            STDIN, STDOUT, STDERR, \React\EventLoop\Factory::create()
+            STDIN, STDOUT, STDERR, \$loop
         )
     );
-    while (\$parent->listen()) {
+    while (\$loop->run()) {
         // NOOP
     }
 }

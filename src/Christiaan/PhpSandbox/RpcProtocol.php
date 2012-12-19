@@ -12,7 +12,6 @@ class RpcProtocol
     private $lastReturn;
     private $lastError;
     private $callbacks;
-    private $listener;
 
     function __construct($readStream, $writeStream, $errorStream,
         LoopInterface $loop)
@@ -36,7 +35,6 @@ class RpcProtocol
             $this->errorStream, array($this, 'receiveError')
         );
         $this->callbacks = array();
-        $this->listener = false;
     }
 
     public function returnValue($value)
@@ -90,12 +88,6 @@ class RpcProtocol
             throw new \InvalidArgumentException();
 
         $this->callbacks[$name] = $callable;
-    }
-
-    public function listen()
-    {
-        $this->listener = true;
-        $this->loop->run();
     }
 
     private function send()

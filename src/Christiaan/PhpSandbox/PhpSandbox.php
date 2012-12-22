@@ -33,6 +33,16 @@ class PhpSandbox
 
     /**
      * @param string $name
+     * @param object $object
+     */
+    public function assignObject($name, $object)
+    {
+        $proxy = new ProxyObject($object);
+        $proxy->assignInSandbox($this, $name);
+    }
+
+    /**
+     * @param string $name
      * @param mixed $value
      * @return mixed
      */

@@ -34,6 +34,12 @@ class SandboxChild
                 $data[$key] = $value;
             }
         );
+        $this->protocol->registerCallback(
+            'assignObject',
+            function ($key) use (&$data) {
+                $data[$key] = new SandboxObjectProxy($this->parent, $key);
+            }
+        );
     }
 
     private function setupErrorHandlers()

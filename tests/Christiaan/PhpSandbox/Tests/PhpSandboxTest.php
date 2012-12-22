@@ -55,4 +55,23 @@ CODE
         $this->assertInstanceOf('Christiaan\PhpSandbox\SandboxClosure', $closure);
         $this->assertEquals(1337, $closure());
     }
+
+    function testAssignedObject()
+    {
+        $sandbox = new PhpSandbox();
+
+        $object = new \ArrayObject(array());
+        $object->setProperty = 12;
+        $sandbox->assignObject('object', $object);
+        $sandbox->execute(<<<CODE
+            \$object->append(10);
+            if (isset(\$object->setProperty)) {
+                \$object->testSet = \$object->setProperty;
+            }
+CODE
+        );
+        $this->assertEquals(1, count($object));
+        $this->assertEquals(10, $object[0]);
+        $this->assertEquals(12, $object->testSet);
+    }
 }

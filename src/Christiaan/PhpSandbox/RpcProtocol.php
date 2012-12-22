@@ -31,6 +31,14 @@ class RpcProtocol
         $this->callbacks = array();
     }
 
+    public function registerCallback($name, $callable)
+    {
+        if (!is_callable($callable))
+            throw new \InvalidArgumentException();
+
+        $this->callbacks[$name] = $callable;
+    }
+
     public function sendReturn($value)
     {
         if ($value instanceof \Closure) {
@@ -51,14 +59,6 @@ class RpcProtocol
     public function sendCall($name, array $args)
     {
         return $this->send('call', $name, $args);
-    }
-
-    public function registerCallback($name, $callable)
-    {
-        if (!is_callable($callable))
-            throw new \InvalidArgumentException();
-
-        $this->callbacks[$name] = $callable;
     }
 
     public function receive($stream)

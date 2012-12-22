@@ -6,6 +6,7 @@ Symfony\Component\ClassLoader\ClassCollectionLoader::load(
         'Christiaan\\PhpSandbox\\RpcProtocol',
         'Christiaan\\PhpSandbox\\Child\\SandboxParent',
         'Christiaan\\PhpSandbox\\Child\\SandboxChild',
+        'Christiaan\\PhpSandbox\\Child\\SandboxObjectProxy',
         'Christiaan\\PhpSandbox\\Exception',
         'React\\EventLoop\\Factory',
         'React\\EventLoop\\Timer\\Timers',

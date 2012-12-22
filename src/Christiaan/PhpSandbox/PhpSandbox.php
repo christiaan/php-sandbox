@@ -28,7 +28,7 @@ class PhpSandbox
      */
     public function assignCallback($name, $callable)
     {
-        $this->getRpcProtocol()->addCallback($name, $callable);
+        $this->getRpcProtocol()->registerCallback($name, $callable);
     }
 
     /**
@@ -62,7 +62,7 @@ class PhpSandbox
         if (!$this->child->isRunning()) {
             throw new Exception('Child Process died');
         }
-        return $child->call($name, $args);
+        return $child->sendCall($name, $args);
     }
 
     /**

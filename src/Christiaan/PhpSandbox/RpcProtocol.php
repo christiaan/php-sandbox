@@ -10,17 +10,14 @@ class RpcProtocol
     private $lastReturn;
     private $lastError;
     private $callbacks;
-    private $returnedClosure = 1;
+    private $closureCounter = 1;
 
     public function __construct($readStream, $writeStream, $errorStream,
         LoopInterface $loop)
     {
-        if (!is_resource($readStream))
-            throw new \InvalidArgumentException();
-        if (!is_resource($writeStream))
-            throw new \InvalidArgumentException();
-        if (!is_resource($errorStream))
-            throw new \InvalidArgumentException();
+        $this->assertResource($readStream);
+        $this->assertResource($writeStream);
+        $this->assertResource($errorStream);
 
         $this->writeStream = $writeStream;
         $this->loop = $loop;
@@ -34,26 +31,34 @@ class RpcProtocol
         $this->callbacks = array();
     }
 
-    public function returnValue($value)
+    public function sendReturn($value)
     {
         if ($value instanceof \Closure) {
-            $name = '__closure_' . $this->returnedClosure;
-            $this->addCallback($name, $value);
-            $this->returnedClosure += 1;
+            $name = '__closure_' . $this->closureCounter;
+            $this->registerCallback($name, $value);
+            $this->closureCounter += 1;
             $this->send('returnClosure', $name);
             return;
         }
         $this->send('return', $value);
     }
 
-    public function error($message)
+    public function sendError($message)
     {
         $this->send('error', $message);
     }
 
-    public function call($name, array $args)
+    public function sendCall($name, array $args)
     {
         return $this->send('call', $name, $args);
+    }
+
+    public function registerCallback($name, $callable)
+    {
+        if (!is_callable($callable))
+            throw new \InvalidArgumentException();
+
+        $this->callbacks[$name] = $callable;
     }
 
     public function receive($stream)
@@ -76,10 +81,10 @@ class RpcProtocol
             $method = array_shift($message);
             $args = array_shift($message);
             if (!array_key_exists($method, $this->callbacks))
-                $this->error('Invalid Method');
+                $this->sendError('Invalid Method');
 
             $ret = call_user_func_array($this->callbacks[$method], $args);
-            $this->returnValue($ret);
+            $this->sendReturn($ret);
         }
     }
 
@@ -88,14 +93,6 @@ class RpcProtocol
         $error = fgets($stream);
         $this->lastError = $error;
         $this->loop->stop();
-    }
-
-    public function addCallback($name, $callable)
-    {
-        if (!is_callable($callable))
-            throw new \InvalidArgumentException();
-
-        $this->callbacks[$name] = $callable;
     }
 
     private function send()
@@ -113,14 +110,14 @@ class RpcProtocol
 
     /**
      * @param resource $stream
+     * @throws \InvalidArgumentException
      * @return array
      */
     private function readMessage($stream)
     {
-        $message = '';
-        if (is_resource($stream))
-            $message = fgets($stream);
+        $this->assertResource($stream);
 
+        $message = fgets($stream);
         if ($message)
             $message = json_decode($message, true);
 
@@ -134,5 +131,15 @@ class RpcProtocol
     {
         $message = json_encode($message).PHP_EOL;
         fputs($this->writeStream, $message);
+    }
+
+    /**
+     * @param $stream
+     * @throws \InvalidArgumentException
+     */
+    private function assertResource($stream)
+    {
+        if (!is_resource($stream))
+            throw new \InvalidArgumentException();
     }
 }

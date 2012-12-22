@@ -21,14 +21,14 @@ class SandboxChild
     {
         $parent = $this->parent;
         $data = array();
-        $this->protocol->addCallback(
+        $this->protocol->registerCallback(
             'execute',
             function ($code) use ($parent, &$data) {
                 extract($data);
                 return eval($code);
             }
         );
-        $this->protocol->addCallback(
+        $this->protocol->registerCallback(
             'assignVar',
             function ($key, $value) use (&$data) {
                 $data[$key] = $value;
@@ -40,7 +40,7 @@ class SandboxChild
     {
         $protocol = $this->protocol;
         $exceptionHandler = function (\Exception $exception) use ($protocol) {
-            $protocol->error($exception->getMessage());
+            $protocol->sendError($exception->getMessage());
         };
         set_exception_handler($exceptionHandler);
 
@@ -56,7 +56,7 @@ class SandboxChild
         // see php.net/ob_start about chunksize
         ob_start(
             function ($output) use ($protocol) {
-                $protocol->call('output', array($output));
+                $protocol->sendCall('output', array($output));
                 return '';
             },
             version_compare(PHP_VERSION, '5.4', '>=') ? 1 : 2

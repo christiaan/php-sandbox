@@ -14,7 +14,7 @@ class SandboxParent
 
     public function __call($name, $args)
     {
-        $ret = $this->protocol->call($name, $args);
+        $ret = $this->protocol->sendCall($name, $args);
 
         return $ret;
     }

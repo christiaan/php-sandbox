@@ -15,6 +15,6 @@ class SandboxClosure
     public function __invoke()
     {
         $args = func_get_args();
-        return $this->protocol->call($this->name, $args);
+        return $this->protocol->sendCall($this->name, $args);
     }
 }

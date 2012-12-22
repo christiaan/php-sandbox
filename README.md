@@ -10,7 +10,7 @@ Installation
 
 Usage
 -----
-For now check the tests folder
+See the various [`tests`](https://github.com/christiaan/php-sandbox/blob/master/tests/Christiaan/PhpSandbox/Tests/PhpSandboxTest.php)
 
 Known issues
 ------------

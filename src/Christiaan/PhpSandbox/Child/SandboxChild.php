@@ -36,8 +36,8 @@ class SandboxChild
         );
         $this->protocol->registerCallback(
             'assignObject',
-            function ($key) use (&$data) {
-                $data[$key] = new SandboxObjectProxy($this->parent, $key);
+            function ($key) use (&$data, $parent) {
+                $data[$key] = new SandboxObjectProxy($parent, $key);
             }
         );
     }

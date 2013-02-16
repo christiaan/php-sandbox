@@ -83,8 +83,12 @@ class RpcProtocol
             if (!array_key_exists($method, $this->callbacks))
                 $this->sendError('Invalid Method');
 
-            $ret = call_user_func_array($this->callbacks[$method], $args);
-            $this->sendReturn($ret);
+            try {
+                $ret = $this->callCallback($method, $args);
+                $this->sendReturn($ret);
+            } catch (\Exception $e) {
+                $this->sendError($e->getMessage());
+            }
         }
     }
 
@@ -131,6 +135,26 @@ class RpcProtocol
     {
         $message = json_encode($message).PHP_EOL;
         fputs($this->writeStream, $message);
+    }
+
+    /**
+     * @param $method
+     * @param $args
+     * @throws \ErrorException
+     * @return mixed
+     */
+    private function callCallback($method, $args)
+    {
+        $error = null;
+        set_error_handler(function($code, $message, $file, $line) use(&$error) {
+                $error = new \ErrorException($message, $code, 0, $file, $line);
+            });
+        $ret = call_user_func_array($this->callbacks[$method], $args);
+        restore_error_handler();
+        if ($error instanceof \ErrorException)
+            throw $error;
+
+        return $ret;
     }
 
     /**

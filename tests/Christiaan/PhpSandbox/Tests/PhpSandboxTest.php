@@ -2,39 +2,45 @@
 namespace Christiaan\PhpSandbox\Tests;
 
 use Christiaan\PhpSandbox\PhpSandbox;
-use Christiaan\PhpSandbox\SandboxBuilder;
 
 class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var PhpSandbox
+     */
+    private $sandbox;
+
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->sandbox = PhpSandbox::builder()->build();
+    }
+
+
     function testBasicSandboxUsage()
     {
-        $sandbox = $this->createSandbox();
-        $sandbox->assignVar('iets', 10);
-        $res = $sandbox->execute('return $iets;');
+        $this->sandbox->assignVar('iets', 10);
+        $res = $this->sandbox->execute('return $iets;');
         $this->assertEquals(10, $res);
     }
 
     function testCallback()
     {
-        $sandbox = $this->createSandbox();
-        $sandbox->assignCallback('multiply', function($a) { return $a * $a; });
-        $res = $sandbox->execute('return $parent->multiply(2);');
+        $this->sandbox->assignCallback('multiply', function($a) { return $a * $a; });
+        $res = $this->sandbox->execute('return $parent->multiply(2);');
         $this->assertEquals(4, $res);
     }
 
     function testOutputHandler()
     {
-        $sandbox = $this->createSandbox();
-        $sandbox->execute('echo "hoi";');
-        $this->assertEquals('hoi', $sandbox->getOutput());
+        $this->sandbox->execute('echo "hoi";');
+        $this->assertEquals('hoi', $this->sandbox->getOutput());
     }
 
     function testErrorHandler()
     {
-        $sandbox = $this->createSandbox();
-
         try {
-            $sandbox->execute('some syntax error');
+            $this->sandbox->execute('some syntax error');
             $thrown = false;
         } catch (\Exception $e) {
             $thrown = true;
@@ -45,10 +51,8 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 
     function testReturnedFunction()
     {
-        $sandbox = $this->createSandbox();
-
         /** @var $closure \Christiaan\PhpSandbox\SandboxClosure */
-        $closure = $sandbox->execute(<<<CODE
+        $closure = $this->sandbox->execute(<<<CODE
 return function() { return 1337; };
 CODE
         );
@@ -59,12 +63,10 @@ CODE
 
     function testAssignedObject()
     {
-        $sandbox = $this->createSandbox();
-
         $object = new \ArrayObject(array());
         $object->setProperty = 12;
-        $sandbox->assignObject('object', $object);
-        $sandbox->execute(<<<CODE
+        $this->sandbox->assignObject('object', $object);
+        $this->sandbox->execute(<<<CODE
             \$object->append(10);
             if (isset(\$object->setProperty)) {
                 \$object->testSet = \$object->setProperty;
@@ -76,8 +78,21 @@ CODE
         $this->assertEquals(12, $object->testSet);
     }
 
-    private function createSandbox()
+    function testErrorInParentCanBeCaught()
     {
-        return PhpSandbox::builder()->build();
+        $this->sandbox->assignCallback('callbackWithError', function() {
+                trigger_error('error in this callback', E_USER_ERROR);
+            });
+
+        $res = $this->sandbox->execute(<<<CODE
+            try {
+                \$parent->callbackWithError('test');
+            } catch(\Exception \$e) {
+                return \$e->getMessage();
+            }
+CODE
+        );
+
+        $this->assertEquals('error in this callback', $res);
     }
 }

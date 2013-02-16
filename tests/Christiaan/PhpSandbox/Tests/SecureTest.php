@@ -30,7 +30,7 @@ class SecureTest extends \PHPUnit_Framework_TestCase
         }
 
         $this->assertTrue($thrown);
-        $this->assertTrue(false !== stripos($e->getMessage(), 'open_basedir restriction in effect'));
+        $this->assertTrue(false !== stripos($e->getMessage(), 'Operation not permitted'));
     }
 
     /**

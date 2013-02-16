@@ -1,7 +1,7 @@
 <?php
 namespace Christiaan\PhpSandbox;
  
-class ProxyObject
+class SandboxProxyObject
 {
     private $object;
 

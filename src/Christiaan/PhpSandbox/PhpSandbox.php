@@ -10,11 +10,16 @@ class PhpSandbox
     /** @var RpcProtocol */
     private $protocol;
     private $output;
-    private $iniSettings;
 
-    public function __construct(array $iniSettings = array())
+    public function __construct(Process $child)
     {
-        $this->iniSettings = $iniSettings;
+        $this->child = $child;
+        $this->protocol = new RpcProtocol(
+            $this->child->getReadStream(),
+            $this->child->getWriteStream(),
+            $this->child->getErrorStream(),
+            Factory::create()
+        );
         $this->output = '';
         $output = &$this->output;
         $this->assignCallback('output', function($out) use(&$output) {
@@ -23,12 +28,20 @@ class PhpSandbox
     }
 
     /**
+     * @return SandboxBuilder
+     */
+    public static function builder()
+    {
+        return new SandboxBuilder();
+    }
+
+    /**
      * @param string $name
      * @param callable $callable
      */
     public function assignCallback($name, $callable)
     {
-        $this->getRpcProtocol()->registerCallback($name, $callable);
+        $this->protocol->registerCallback($name, $callable);
     }
 
     /**
@@ -37,7 +50,7 @@ class PhpSandbox
      */
     public function assignObject($name, $object)
     {
-        $proxy = new ProxyObject($object);
+        $proxy = new SandboxProxyObject($object);
         $proxy->assignInSandbox($this, $name);
     }
 
@@ -68,11 +81,10 @@ class PhpSandbox
      */
     public function call($name, array $args)
     {
-        $child = $this->getRpcProtocol();
         if (!$this->child->isRunning()) {
             throw new Exception('Child Process died');
         }
-        return $child->sendCall($name, $args);
+        return $this->protocol->sendCall($name, $args);
     }
 
     /**
@@ -82,40 +94,5 @@ class PhpSandbox
     public function getOutput()
     {
         return $this->output;
-    }
-
-    private function getRpcProtocol()
-    {
-        if (!$this->protocol) {
-            $childBin = __DIR__.'/../../../bin/child.php';
-            if (!is_file($childBin))
-                throw new Exception('child.php not found generate it using bin/generateChild.php');
-
-            $cmd = sprintf(
-                'php %s %s',
-                $this->getChildArgs(),
-                escapeshellarg(realpath($childBin))
-            );
-            $this->child = new Process($cmd);
-            if (!$this->child->isOpen() || !$this->child->isRunning())
-                throw new Exception('Failed to spawn child process');
-
-            $this->protocol = new RpcProtocol(
-                $this->child->getReadStream(),
-                $this->child->getWriteStream(),
-                $this->child->getErrorStream(),
-                Factory::create()
-            );
-        }
-        return $this->protocol;
-    }
-
-    private function getChildArgs()
-    {
-        $args = array();
-        foreach ($this->iniSettings as $key => $value) {
-            $args .= sprintf('-d %s=%s', escapeshellarg($key), escapeshellarg($value));
-        }
-        return implode(' ', $args);
     }
 }

@@ -11,9 +11,9 @@ class SandboxChild
     public function __construct(RpcProtocol $protocol)
     {
         $this->protocol = $protocol;
+        $this->setupErrorHandlers();
         $this->parent = new SandboxParent($protocol);
         $this->setupCallbacks();
-        $this->setupErrorHandlers();
         $this->setupOutputBuffering();
     }
 

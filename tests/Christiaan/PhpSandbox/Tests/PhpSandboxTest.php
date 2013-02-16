@@ -2,12 +2,13 @@
 namespace Christiaan\PhpSandbox\Tests;
 
 use Christiaan\PhpSandbox\PhpSandbox;
+use Christiaan\PhpSandbox\SandboxBuilder;
 
 class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 {
     function testBasicSandboxUsage()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
         $sandbox->assignVar('iets', 10);
         $res = $sandbox->execute('return $iets;');
         $this->assertEquals(10, $res);
@@ -15,7 +16,7 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 
     function testCallback()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
         $sandbox->assignCallback('multiply', function($a) { return $a * $a; });
         $res = $sandbox->execute('return $parent->multiply(2);');
         $this->assertEquals(4, $res);
@@ -23,14 +24,14 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 
     function testOutputHandler()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
         $sandbox->execute('echo "hoi";');
         $this->assertEquals('hoi', $sandbox->getOutput());
     }
 
     function testErrorHandler()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
 
         try {
             $sandbox->execute('some syntax error');
@@ -44,7 +45,7 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
 
     function testReturnedFunction()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
 
         /** @var $closure \Christiaan\PhpSandbox\SandboxClosure */
         $closure = $sandbox->execute(<<<CODE
@@ -58,7 +59,7 @@ CODE
 
     function testAssignedObject()
     {
-        $sandbox = new PhpSandbox();
+        $sandbox = $this->createSandbox();
 
         $object = new \ArrayObject(array());
         $object->setProperty = 12;
@@ -73,5 +74,10 @@ CODE
         $this->assertEquals(1, count($object));
         $this->assertEquals(10, $object[0]);
         $this->assertEquals(12, $object->testSet);
+    }
+
+    private function createSandbox()
+    {
+        return PhpSandbox::builder()->build();
     }
 }

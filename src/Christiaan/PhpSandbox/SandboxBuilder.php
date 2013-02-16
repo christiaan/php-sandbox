@@ -4,6 +4,7 @@ namespace Christiaan\PhpSandbox;
 class SandboxBuilder
 {
     private $iniSettings;
+    private $jailDir;
 
     public function __construct()
     {
@@ -42,27 +43,25 @@ class SandboxBuilder
                 'system',
                 'proc_open',
                 'popen',
-                'curl_exec',
-                'curl_multi_exec',
-                'parse_ini_file',
-                'show_source',
                 'pcntl_fork',
                 'pcntl_exec',
-                'session_start',
                 'phpinfo',
                 'ini_set'
             )
         );
-        $this->disableClasses(
-            array(
-                'SoapClient'
-            )
-        );
         $this->openBasedir(array($jailDir));
+        $this->jailDir = $jailDir;
+
+        return $this;
     }
 
     public function build()
     {
+        $cwd = false;
+        if ($this->jailDir) {
+            $cwd = getcwd();
+            chdir($this->jailDir);
+        }
         $childBin = __DIR__.'/../../../bin/child.php';
         if (!is_file($childBin))
             throw new Exception('child.php not found generate it using bin/generateChild.php');
@@ -77,15 +76,18 @@ class SandboxBuilder
         if (!$child->isOpen() || !$child->isRunning())
             throw new Exception('Failed to spawn child process');
 
+        if ($cwd)
+            chdir($cwd);
+
         return new PhpSandbox($child);
     }
 
     private function compileArgs()
     {
         $args = array();
-        foreach ($this->iniSettings as $key => $value) {
-            $args .= sprintf('-d %s=%s', escapeshellarg($key), escapeshellarg($value));
-        }
+        foreach ($this->iniSettings as $key => $value)
+            $args[] = sprintf('-d %s=%s', escapeshellarg($key), escapeshellarg($value));
+
         return implode(' ', $args);
     }
 }

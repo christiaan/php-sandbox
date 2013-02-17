@@ -10,10 +10,8 @@ Installation
 
 Usage
 -----
-See the various [`tests`](https://github.com/christiaan/php-sandbox/blob/master/tests/Christiaan/PhpSandbox/Tests/PhpSandboxTest.php)
+See the various [tests](https://github.com/christiaan/php-sandbox/blob/master/tests/Christiaan/PhpSandbox/Tests)
 
 Known issues
 ------------
-Should work on Windows but doesn't for some reason.
-
-Only json encodable values can be exchanged between the host and the sandbox process.
+Does not work on Windows, most likely due to this [bug](https://bugs.php.net/bug.php?id=47918)

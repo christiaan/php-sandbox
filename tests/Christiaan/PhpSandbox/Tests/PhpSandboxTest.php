@@ -16,7 +16,6 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
         $this->sandbox = PhpSandbox::builder()->build();
     }
 
-
     function testBasicSandboxUsage()
     {
         $this->sandbox->assignVar('iets', 10);

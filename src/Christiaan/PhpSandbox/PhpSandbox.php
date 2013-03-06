@@ -1,17 +1,18 @@
 <?php
 namespace Christiaan\PhpSandbox;
 
+use Christiaan\StreamProcess\StreamProcess;
 use React\EventLoop\Factory;
 
 class PhpSandbox
 {
-    /** @var Process */
+    /** @var StreamProcess */
     private $child;
     /** @var RpcProtocol */
     private $protocol;
     private $output;
 
-    public function __construct(Process $child)
+    public function __construct(StreamProcess $child)
     {
         $this->child = $child;
         $this->protocol = new RpcProtocol(

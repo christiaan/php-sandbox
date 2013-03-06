@@ -1,6 +1,8 @@
 <?php
 namespace Christiaan\PhpSandbox;
 
+use Christiaan\StreamProcess\StreamProcess;
+
 class SandboxBuilder
 {
     private $iniSettings;
@@ -136,7 +138,7 @@ class SandboxBuilder
     }
 
     /**
-     * @return Process
+     * @return StreamProcess
      * @throws Exception
      */
     private function spawnChildProcess()
@@ -157,7 +159,7 @@ class SandboxBuilder
             $this->compileArgs(),
             escapeshellarg(realpath($childBin))
         );
-        $child = new Process($cmd);
+        $child = new StreamProcess($cmd);
 
         if ($cwd)
             chdir($cwd);

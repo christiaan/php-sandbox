@@ -1,3 +1,4 @@
 vendor
 bin/child.php
 phpunit.xml
+composer.lock

@@ -33,7 +33,28 @@ class PhpSandboxTest extends \PHPUnit_Framework_TestCase
     function testOutputHandler()
     {
         $this->sandbox->execute('echo "hoi";');
-        $this->assertEquals('hoi', $this->sandbox->getOutput());
+        $this->assertEquals('hoi', $this->sandbox->getAndCleanOutput());
+    }
+
+    function testLotsOfGeneratedOutput()
+    {
+        $this->sandbox->execute(<<<CODE
+var_dump(array_fill(0, 10000, 'some output'));
+CODE
+        );
+    }
+
+    function testParentGeneratedOutput()
+    {
+        $this->sandbox->assignCallback('echo', function($str) {
+                echo $str;
+            });
+        $output = $this->sandbox->execute(<<<CODE
+\$parent->echo('test output');
+return \$parent->output;
+CODE
+        );
+        $this->assertEquals('test output', $output);
     }
 
     function testErrorHandler()
@@ -93,13 +114,5 @@ CODE
         );
 
         $this->assertEquals('error in this callback', $res);
-    }
-
-    function testLotsOfGeneratedOutput()
-    {
-        $this->sandbox->execute(<<<CODE
-var_dump(array_fill(0, 10000, 'some output'));
-CODE
-);
     }
 }

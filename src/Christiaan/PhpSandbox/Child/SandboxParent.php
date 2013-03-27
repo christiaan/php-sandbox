@@ -6,10 +6,15 @@ use Christiaan\PhpSandbox\RpcProtocol;
 class SandboxParent
 {
     private $protocol;
+    public $output;
 
     public function __construct(RpcProtocol $protocol)
     {
         $this->protocol = $protocol;
+        $self = $this;
+        $this->protocol->registerOutputCallback(function($string) use($self) {
+                $self->output .= $string;
+            });
     }
 
     public function __call($name, $args)

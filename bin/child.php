@@ -9,6 +9,7 @@ private $loop;
 private $lastReturn;
 private $lastError;
 private $callbacks;
+private $outputCallback;
 private $closureCounter = 1;
 public function __construct($readStream, $writeStream, $errorStream,
 LoopInterface $loop)
@@ -32,24 +33,37 @@ if (!is_callable($callable))
 throw new \InvalidArgumentException();
 $this->callbacks[$name] = $callable;
 }
+public function registerOutputCallback($callable)
+{
+if ($callable !== null && !is_callable($callable))
+throw new \InvalidArgumentException();
+$this->outputCallback = $callable;
+}
 public function sendReturn($value)
 {
 if ($value instanceof \Closure) {
 $name ='__closure_'. $this->closureCounter;
 $this->registerCallback($name, $value);
 $this->closureCounter += 1;
-$this->send('returnClosure', $name);
+$this->writeMessage(array('returnClosure', $name));
 return;
 }
-$this->send('return', $value);
+$this->writeMessage(array('return', $value));
 }
 public function sendError($message)
 {
-$this->send('error', $message);
+$this->writeMessage(array('error', $message));
 }
 public function sendCall($name, array $args)
 {
 return $this->send('call', $name, $args);
+}
+public function handleOutput($output)
+{
+if ($output) {
+$this->writeMessage(array('output', $output));
+}
+return'';
 }
 public function receive($stream)
 {
@@ -58,6 +72,12 @@ $action = array_shift($message);
 if ($action ==='return') {
 $this->lastReturn = array_shift($message);
 $this->loop->stop();
+}
+if ($action ==='output') {
+if (!$this->outputCallback) {
+$this->sendError('Output handling isn\'t set up: '. array_shift($message));
+}
+call_user_func($this->outputCallback, array_shift($message));
 }
 if ($action ==='returnClosure') {
 $this->lastReturn = new SandboxClosure($this, array_shift($message));
@@ -118,7 +138,9 @@ $error = null;
 set_error_handler(function($code, $message, $file, $line) use(&$error) {
 $error = new \ErrorException($message, $code, 0, $file, $line);
 });
+ob_start(array($this,'handleOutput'), 4096);
 $ret = call_user_func_array($this->callbacks[$method], $args);
+ob_end_flush();
 restore_error_handler();
 if ($error instanceof \ErrorException)
 throw $error;
@@ -137,9 +159,14 @@ use Christiaan\PhpSandbox\RpcProtocol;
 class SandboxParent
 {
 private $protocol;
+public $output;
 public function __construct(RpcProtocol $protocol)
 {
 $this->protocol = $protocol;
+$self = $this;
+$this->protocol->registerOutputCallback(function($string) use($self) {
+$self->output .= $string;
+});
 }
 public function __call($name, $args)
 {
@@ -161,7 +188,6 @@ $this->protocol = $protocol;
 $this->setupErrorHandlers();
 $this->parent = new SandboxParent($protocol);
 $this->setupCallbacks();
-$this->setupOutputBuffering();
 }
 private function setupCallbacks()
 {
@@ -169,7 +195,7 @@ $parent = $this->parent;
 $data = array();
 $this->protocol->registerCallback('execute',
 function ($code) use ($parent, &$data) {
-extract($data);
+extract($data, EXTR_SKIP);
 return eval($code);
 }
 );
@@ -195,17 +221,6 @@ $errorHandler = function ($errno, $errstr, $errfile, $errline) use ($exceptionHa
 $exceptionHandler(new \ErrorException($errstr, $errno, 0, $errfile, $errline));
 };
 set_error_handler($errorHandler);
-}
-private function setupOutputBuffering()
-{
-$protocol = $this->protocol;
-ob_start(
-function ($output) use ($protocol) {
-$protocol->sendCall('output', array($output));
-return'';
-},
-version_compare(PHP_VERSION,'5.4','>=') ? 1 : 2
-);
 }
 }
 }

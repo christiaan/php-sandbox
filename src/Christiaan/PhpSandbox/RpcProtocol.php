@@ -10,6 +10,7 @@ class RpcProtocol
     private $lastReturn;
     private $lastError;
     private $callbacks;
+    private $outputCallback;
     private $closureCounter = 1;
 
     public function __construct($readStream, $writeStream, $errorStream,
@@ -39,6 +40,14 @@ class RpcProtocol
         $this->callbacks[$name] = $callable;
     }
 
+    public function registerOutputCallback($callable)
+    {
+        if ($callable !== null && !is_callable($callable))
+            throw new \InvalidArgumentException();
+
+        $this->outputCallback = $callable;
+    }
+
     public function sendReturn($value)
     {
         if ($value instanceof \Closure) {
@@ -61,6 +70,14 @@ class RpcProtocol
         return $this->send('call', $name, $args);
     }
 
+    public function handleOutput($output)
+    {
+        if ($output) {
+            $this->writeMessage(array('output', $output));
+        }
+        return '';
+    }
+
     public function receive($stream)
     {
         $message = $this->readMessage($stream);
@@ -68,6 +85,12 @@ class RpcProtocol
         if ($action === 'return') {
             $this->lastReturn = array_shift($message);
             $this->loop->stop();
+        }
+        if ($action === 'output') {
+            if (!$this->outputCallback) {
+                $this->sendError('Output handling isn\'t set up: ' . array_shift($message));
+            }
+            call_user_func($this->outputCallback, array_shift($message));
         }
         if ($action === 'returnClosure') {
             $this->lastReturn = new SandboxClosure($this, array_shift($message));
@@ -149,7 +172,10 @@ class RpcProtocol
         set_error_handler(function($code, $message, $file, $line) use(&$error) {
                 $error = new \ErrorException($message, $code, 0, $file, $line);
             });
+
+        ob_start(array($this, 'handleOutput'), 4096);
         $ret = call_user_func_array($this->callbacks[$method], $args);
+        ob_end_flush();
         restore_error_handler();
         if ($error instanceof \ErrorException)
             throw $error;

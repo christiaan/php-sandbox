@@ -94,4 +94,12 @@ CODE
 
         $this->assertEquals('error in this callback', $res);
     }
+
+    function testLotsOfGeneratedOutput()
+    {
+        $this->sandbox->execute(<<<CODE
+var_dump(array_fill(0, 10000, 'some output'));
+CODE
+);
+    }
 }

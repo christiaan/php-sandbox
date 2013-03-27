@@ -45,15 +45,15 @@ class RpcProtocol
             $name = '__closure_' . $this->closureCounter;
             $this->registerCallback($name, $value);
             $this->closureCounter += 1;
-            $this->send('returnClosure', $name);
+            $this->writeMessage(array('returnClosure', $name));
             return;
         }
-        $this->send('return', $value);
+        $this->writeMessage(array('return', $value));
     }
 
     public function sendError($message)
     {
-        $this->send('error', $message);
+        $this->writeMessage(array('error', $message));
     }
 
     public function sendCall($name, array $args)
